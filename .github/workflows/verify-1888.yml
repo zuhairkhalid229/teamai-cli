@@ -34,3 +34,34 @@ jobs:
         run: npm run lint
       - name: Related tests
         run: npx vitest run src/__tests__/opencode-version.test.ts src/__tests__/exec.test.ts src/__tests__/tool-launch-confined.test.ts src/__tests__/tool-launch-confined-tools.test.ts src/__tests__/opencode-hooks.test.ts src/__tests__/installed-launcher-readiness.test.ts src/__tests__/mcp-reconcile.test.ts src/__tests__/session-cmd.test.ts src/__tests__/doctor-scorers.test.ts packages/tool-opencode packages/runtime-tools packages/shared packages/tool-core packages/tool-codex
+
+  world:
+    name: real-CLI world (${{ matrix.ref }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ref: [main, fix/1888-probe-version-xdg]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Install the real OpenCode CLI
+        run: |
+          npm install -g opencode-ai
+          which opencode && opencode --version
+      - name: World run
+        run: |
+          set -x
+          RUN=$(npm run -s verify:world)
+          echo "run=$RUN"
+          npm run -s verify -- doctor "$RUN" || true
+          npm run -s verify -- teamai "$RUN" init https://teamai.test/team/repo.git --provider git --agent opencode < /dev/null || true
+          npm run -s verify -- teamai "$RUN" doctor < /dev/null || true
+          npm run -s verify -- sh "$RUN" sh -c 'echo "HOME=$HOME"; for d in "$HOME/.local/share/opencode" "$HOME/.cache/opencode" "$HOME/.local/state/opencode"; do if [ -e "$d" ]; then echo "PRESENT $d"; else echo "absent $d"; fi; done' || true
+          npm run -s verify -- ledger "$RUN" || true
+          cat "$(npm run -s verify -- dir "$RUN")"/LEDGER-*.md || true
