@@ -25,7 +25,7 @@ jobs:
         if: matrix.ref == 'main'
         run: |
           git fetch origin fix/1888-probe-version-xdg
-          git checkout FETCH_HEAD -- src/__tests__/tool-launch-confined.test.ts src/__tests__/opencode-version.test.ts
+          git checkout FETCH_HEAD -- src/__tests__/tool-launch-confined.test.ts src/__tests__/opencode-version.test.ts packages/tool-opencode/src/testing/fake-opencode.ts src/__tests__/agent-session-find.test.ts src/__tests__/agent-session-copy.test.ts
       - name: Type check
         if: matrix.ref != 'main'
         run: npx tsc --noEmit
@@ -33,7 +33,7 @@ jobs:
         if: matrix.ref != 'main'
         run: npm run lint
       - name: Related tests
-        run: npx vitest run src/__tests__/opencode-version.test.ts src/__tests__/exec.test.ts src/__tests__/tool-launch-confined.test.ts src/__tests__/tool-launch-confined-tools.test.ts src/__tests__/opencode-hooks.test.ts src/__tests__/installed-launcher-readiness.test.ts src/__tests__/mcp-reconcile.test.ts src/__tests__/session-cmd.test.ts src/__tests__/doctor-scorers.test.ts packages/tool-opencode packages/runtime-tools packages/shared packages/tool-core packages/tool-codex
+        run: npx vitest run src/__tests__/opencode-version.test.ts src/__tests__/exec.test.ts src/__tests__/tool-launch-confined.test.ts src/__tests__/tool-launch-confined-tools.test.ts src/__tests__/opencode-hooks.test.ts src/__tests__/installed-launcher-readiness.test.ts src/__tests__/mcp-reconcile.test.ts src/__tests__/session-cmd.test.ts src/__tests__/doctor-scorers.test.ts src/__tests__/agent-session-find.test.ts src/__tests__/agent-session-copy.test.ts packages/tool-opencode packages/runtime-tools packages/shared packages/tool-core packages/tool-codex
 
   world:
     name: real-CLI world (${{ matrix.ref }})
