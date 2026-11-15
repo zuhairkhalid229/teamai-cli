@@ -1,0 +1,36 @@
+name: Verify 1888
+
+on:
+  push:
+    branches: [ci/verify-1888]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: tests (${{ matrix.ref }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ref: [main, fix/1888-probe-version-xdg]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Bring in the new tests (main runs them against the old code)
+        if: matrix.ref == 'main'
+        run: |
+          git fetch origin fix/1888-probe-version-xdg
+          git checkout FETCH_HEAD -- src/__tests__/tool-launch-confined.test.ts src/__tests__/opencode-version.test.ts
+      - name: Type check
+        if: matrix.ref != 'main'
+        run: npx tsc --noEmit
+      - name: Lint
+        if: matrix.ref != 'main'
+        run: npm run lint
+      - name: Related tests
+        run: npx vitest run src/__tests__/opencode-version.test.ts src/__tests__/exec.test.ts src/__tests__/tool-launch-confined.test.ts src/__tests__/tool-launch-confined-tools.test.ts src/__tests__/opencode-hooks.test.ts src/__tests__/installed-launcher-readiness.test.ts src/__tests__/mcp-reconcile.test.ts src/__tests__/session-cmd.test.ts src/__tests__/doctor-scorers.test.ts packages/tool-opencode packages/runtime-tools packages/shared packages/tool-core packages/tool-codex
